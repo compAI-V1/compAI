@@ -1,9 +1,21 @@
 from __future__ import annotations
-import os, shutil
+import os, shutil, tempfile
 from pathlib import Path
 
-ROOT = Path(os.getenv("FILES_ROOT", "./data/files")).resolve()
-ROOT.mkdir(parents=True, exist_ok=True)
+def _find_root():
+    cand = Path(os.getenv("FILES_ROOT", "./data/files")).resolve()
+    try:
+        cand.mkdir(parents=True, exist_ok=True)
+        probe = cand / ".probe"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink(missing_ok=True)
+        return cand
+    except OSError:
+        fb = Path(tempfile.gettempdir()) / "compai-files"
+        fb.mkdir(parents=True, exist_ok=True)
+        return fb
+
+ROOT = _find_root()
 ALLOWED = {".txt", ".md", ".csv", ".json", ".py", ".js", ".html", ".css", ".pdf", ".docx", ".xlsx", ".png", ".jpg", ".jpeg"}
 
 def safe_path(relative: str) -> Path:
