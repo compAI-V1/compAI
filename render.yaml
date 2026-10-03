@@ -1,0 +1,24 @@
+# Render Blueprint — compAI (plan gratuit, sans carte bancaire)
+# Utilisation : https://render.com → "New" → "Blueprint" → coller l'URL du dépôt GitHub
+services:
+  - type: web
+    name: compai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: COMPAI_DEMO
+        value: "1"
+      - key: CODE_EXECUTION_MODE
+        value: disabled
+      - key: APP_TOKEN_SECRET
+        generateValue: true
+      # Sans DATABASE_URL, la base est SQLite (données effacées à chaque redéploiement).
+      # Pour garder les comptes : créer une base PostgreSQL gratuite sur Neon/Supabase
+      # puis ajouter la variable DATABASE_URL (voir COMPAI-MISE-EN-LIGNE.md).
+      # Pour activer le vrai chat IA : ajouter ANTHROPIC_API_KEY (console.anthropic.com),
+      # et pour la recherche web : TAVILY_API_KEY.

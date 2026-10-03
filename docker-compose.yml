@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: compai
+      POSTGRES_USER: compai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-this-password}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U compai -d compai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  sandbox:
+    build: .
+    command: ["uvicorn", "sandbox_runner:app", "--host", "0.0.0.0", "--port", "9000"]
+    environment:
+      SANDBOX_RUNNER_SECRET: ${SANDBOX_RUNNER_SECRET:-change-this-runner-secret}
+      CODE_EXECUTION_MODE: local
+      CODE_EXEC_TIMEOUT_SECONDS: 15
+      MAX_CODE_BYTES: 20000
+    expose: ["9000"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+  app:
+    build: .
+    ports: ["8000:8000"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://compai:${POSTGRES_PASSWORD:-change-this-password}@db:5432/compai
+      CODE_EXECUTION_MODE: runner
+      SANDBOX_RUNNER_URL: http://sandbox:9000
+      SANDBOX_RUNNER_SECRET: ${SANDBOX_RUNNER_SECRET:-change-this-runner-secret}
+    depends_on:
+      db: {condition: service_healthy}
+      sandbox: {condition: service_started}
+    volumes: [./data:/app/data]
+volumes:
+  postgres_data:
