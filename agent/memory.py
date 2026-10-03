@@ -2,8 +2,27 @@ from __future__ import annotations
 import base64, hashlib, hmac, os, secrets
 from contextlib import contextmanager
 from pathlib import Path
-DATABASE_URL=os.getenv('DATABASE_URL','sqlite:///./data/compai.db'); DB_PATH=Path(DATABASE_URL.replace('sqlite:///','')) if DATABASE_URL.startswith('sqlite:///') else None
-if DB_PATH: DB_PATH.parent.mkdir(parents=True,exist_ok=True)
+import tempfile
+DATABASE_URL=os.getenv('DATABASE_URL','').strip(); DB_PATH=None
+if DATABASE_URL.startswith('sqlite:///'):
+    _p=Path(DATABASE_URL[len('sqlite:///'):])
+    if str(_p).startswith('/'):
+        DB_PATH=_p
+elif DATABASE_URL:
+    DB_PATH=None  # PostgreSQL via DATABASE_URL
+if DB_PATH is None:
+    cand=Path('./data/compai.db')
+    try:
+        cand.parent.mkdir(parents=True,exist_ok=True); DB_PATH=cand
+    except OSError:
+        DB_PATH=Path(tempfile.gettempdir())/'compai.db'
+if DB_PATH:
+    try: DB_PATH.parent.mkdir(parents=True,exist_ok=True)
+    except OSError: DB_PATH=None
+if DB_PATH is None:
+    DB_PATH=Path(tempfile.gettempdir())/'compai.db'
+    try: DB_PATH.parent.mkdir(parents=True,exist_ok=True)
+    except OSError: pass
 def _connect():
     if DB_PATH:
         import sqlite3

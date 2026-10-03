@@ -4,7 +4,7 @@ import os
 APP_ENV = os.getenv("APP_ENV", "development").lower()
 IS_PRODUCTION = APP_ENV in {"prod", "production"}
 TOKEN_SECRET = os.getenv("APP_TOKEN_SECRET", "dev-only-change-me")
-DEMO_MODE = os.getenv("COMPAI_DEMO", "0") == "1"
+DEMO_MODE = os.getenv("COMPAI_DEMO", "1") == "1"
 
 def validate_config():
     if IS_PRODUCTION:

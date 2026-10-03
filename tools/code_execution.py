@@ -14,8 +14,8 @@ def _result(stdout, stderr, code, timed_out, tmp):
 
 def execute_python(code: str) -> dict:
     if len(code.encode('utf-8')) > MAX_CODE_BYTES: return {'stdout':'','stderr':'Code exceeds MAX_CODE_BYTES','exit_code':-1,'timed_out':False,'generated_files':[]}
-    if os.getenv('CODE_EXECUTION_MODE','local') == 'disabled': return {'stdout':'','stderr':'Code execution is disabled on this deployment (CODE_EXECUTION_MODE=disabled)','exit_code':-1,'timed_out':False,'generated_files':[]}
-    if os.getenv('CODE_EXECUTION_MODE','local') == 'runner':
+    if os.getenv('CODE_EXECUTION_MODE','disabled') == 'disabled': return {'stdout':'','stderr':'Code execution is disabled on this deployment (CODE_EXECUTION_MODE=disabled)','exit_code':-1,'timed_out':False,'generated_files':[]}
+    if os.getenv('CODE_EXECUTION_MODE','disabled') == 'runner':
         import httpx
         try:
             r=httpx.post(os.getenv('SANDBOX_RUNNER_URL','http://sandbox:9000')+'/execute', headers={'X-Runner-Secret':os.getenv('SANDBOX_RUNNER_SECRET','')}, json={'code':code}, timeout=TIMEOUT+5); r.raise_for_status(); return r.json()
